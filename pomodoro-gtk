@@ -1,0 +1,35 @@
+#!/bin/bash
+
+# Emplacement du fichier de log
+LOGFILE="$HOME/pomodoro.log"
+# nom du poste
+hostname=`hostname`
+# Saisie du nom de la tâche 
+pomodoro=`zenity --entry --title="Pomodoro" --text="Saisir le nom du Pomodoro:"`
+# Interval entre chaque notification
+intervalnotif="5m"
+# Nombre de notification dans un Pomodoro (5m * 5 = 25 minutes)
+iteration=5
+# Temps d'affichage de la notification courte en ms (notification affichant le temps depuis le lancement)
+notifcourt=3000
+# Temps d'affichage de la notification longue en ms (notification de fin)
+notiflong=30000
+
+datelog=`date --rfc-3339=seconds` 
+date1=$(date +"%s")
+echo "$datelog $hostname pomodoro: Lancement du Pomodoro $pomodoro" >> $LOGFILE
+notify-send -t $notifcourt -i task-due -u normal "Pomodoro" "Début du Pomodoro $pomodoro"
+for (( c=1; c<=$iteration; c++ ))
+do
+    sleep $intervalnotif
+    date2=$(date +"%s")
+    diff=$(($date2-$date1))
+    if [ $c -eq $iteration ]; then
+        datelog=`date --rfc-3339=seconds` 
+        echo "$datelog $hostname pomodoro: Fin du Pomodoro $pomodoro" >> $LOGFILE
+        notify-send -t $notiflong -i task-past-due -u critical "Pomodoro" "Fin du Pomodoro $pomodoro"
+    else
+        notify-send -t $notifcourt -i info -u low "Pomodoro" "$pomodoro commencé depuis $(($diff / 60)) minutes et $(($diff % 60)) secondes"
+    fi
+done
+
